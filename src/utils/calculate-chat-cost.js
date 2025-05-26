@@ -66,8 +66,58 @@ const ONE_USD = 355.63; // HUF
  *  * if the tokens to be counted are not from the enum the returned value is `N/A`
  */
 export function calculateChatCost(conversation, params) {
-    //
-    // TODO: your code here
-    //
-    return `0 USD`;
+     const validCurrencies = ['USD', 'HUF'];
+    const validCounts = ['prompt', 'completion', 'total'];
+
+    if (!params || !validCurrencies.includes(params.currency) || !validCounts.includes(params.count)) {
+        return 'N/A';
+    }
+
+    if (!Array.isArray(conversation) || conversation.length === 0) {
+        return `0 ${params.currency}`;
+    }
+
+    let totalCostUSD = 0;
+
+    for (const chat of conversation) {
+        const model = chat.model;
+        const usage = chat.usage;
+
+        if (!MODEL_COST_MAP[model]) {
+            console.warn('Unknown model');
+            continue;
+        }
+
+        const costPerMillion = MODEL_COST_MAP[model];
+
+        if (!usage) continue;
+
+        switch (params.count) {
+            case 'prompt':
+                if (typeof usage.prompt_tokens === 'number') {
+                    totalCostUSD += (usage.prompt_tokens / 1_000_000) * costPerMillion.input;
+                }
+                break;
+            case 'completion':
+                if (typeof usage.completion_tokens === 'number') {
+                    totalCostUSD += (usage.completion_tokens / 1_000_000) * costPerMillion.output;
+                }
+                break;
+            case 'total':
+                if (typeof usage.prompt_tokens === 'number') {
+                    totalCostUSD += (usage.prompt_tokens / 1_000_000) * costPerMillion.input;
+                }
+                if (typeof usage.completion_tokens === 'number') {
+                    totalCostUSD += (usage.completion_tokens / 1_000_000) * costPerMillion.output;
+                }
+                break;
+        }
+    }
+
+    let cost = params.currency === 'USD' ? totalCostUSD : totalCostUSD * ONE_USD;
+
+    // Levágjuk a felesleges nullákat max 6 tizedesjegyig
+    cost = parseFloat(cost.toFixed(6));
+
+    return `${cost} ${params.currency}`;
 }

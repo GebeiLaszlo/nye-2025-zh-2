@@ -67,6 +67,24 @@
     font-size: 14px;
     line-height: 1.5;
 }
+.assistant-feedback button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  margin-right: 8px;
+  filter: grayscale(100%);
+  transition: filter 0.2s ease;
+}
 
-/* TODO: implement CSS solution here */
-/* NOTE: don't forget about the JS task */
+.assistant-feedback button.active {
+  filter: none;
+}
+
+.assistant-feedback button.like-button::before {
+  content: '👍';
+}
+
+.assistant-feedback button.dislike-button::before {
+  content: '👎';
+}
